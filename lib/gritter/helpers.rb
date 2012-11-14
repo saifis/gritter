@@ -9,6 +9,7 @@ module Gritter
       notification.push("image:'#{options[:image]}',") if options[:image].present?
       notification.push("sticky:#{options[:sticky]},") if options[:sticky].present?
       notification.push("time:#{options[:time]},") if options[:time].present?
+      notification.push("gritter_id:'#{options[:gritter_id]}',") if options[:gritter_id].present?
       notification.push("class_name:'#{options[:class_name]}',") if options[:class_name].present?
       notification.push("before_open:function(e){#{options[:before_open]}},") if options[:before_open].present?
       notification.push("after_open:function(e){#{options[:after_open]}},") if options[:after_open].present?

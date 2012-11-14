@@ -144,13 +144,14 @@ window.Modernizr = function (a, b, c) {
     fade_in_speed: '',
     fade_out_speed: '',
     time: '',
-      
+    gritter_id: '', //id fed by rails
+
     // Private - no touchy the private parts
     _custom_timer: 0,
     _item_count: 0,
     _is_setup: 0,
     _tpl_close: '<div class="gritter-close"></div>',
-    _tpl_item: '<div id="gritter-item-[[number]]" class="gritter-item-wrapper [[item_class]]" style="display:none">'+ gritter_item +'</div>',
+    _tpl_item: '<div id="gritter-item-[[number]]" class="gritter-item-wrapper [[item_class]]" gritter_id=[[gritter_id]] style="display:none">'+ gritter_item +'</div>',
     _tpl_wrap: '<div id="gritter-notice-wrapper"></div>',
       
     /**
@@ -158,8 +159,7 @@ window.Modernizr = function (a, b, c) {
     * @param {Object} params The object that contains all the options for drawing the notification
     * @return {Integer} The specific numeric id to that gritter notification
     */
-    add: function(params){
-      
+    add: function(params){    
       // We might have some issues if we don't have a title or text!
       if(!params.title || !params.text){
         throw 'You need to fill out the first 2 params: "title" and "text"'; 
@@ -178,13 +178,27 @@ window.Modernizr = function (a, b, c) {
         item_class = params.class_name || '',
         position = $.gritter.options.position,
         time_alive = params.time || '';
-      
-      this._verifyWrapper();
-      
+		gritter_id = params.gritter_id
+	    is_duplicate = false;
+	
+	  $(".gritter-item-wrapper").each(function(){
+		if( $(this).attr('gritter_id') == gritter_id ){
+			is_duplicate =  true;
+		}
+	  });
+	  
+	  if( is_duplicate ){
+		
+		return this._item_count;
+	  }
+	  else{
+		
+      	this._verifyWrapper();
+
       this._item_count++;
       var number = this._item_count, 
         tmp = this._tpl_item;
-      
+
       // Assign callbacks
       $(['before_open', 'after_open', 'before_close', 'after_close']).each(function(i, val){
         Gritter['_' + val + '_' + number] = ($.isFunction(params[val])) ? params[val] : function(){}
@@ -192,34 +206,34 @@ window.Modernizr = function (a, b, c) {
 
       // Reset
       this._custom_timer = 0;
-      
+
       // A custom fade time set
       if(time_alive){
         this._custom_timer = time_alive;
       }
-      
+
       var image_str = (image != '') ? '<img src="' + image + '" class="gritter-image" />' : '',
         class_name = (image != '') ? 'gritter-with-image' : 'gritter-without-image';
-      
+
       // String replacements on the template
       tmp = this._str_replace(
-        ['[[username]]', '[[text]]', '[[close]]', '[[image]]', '[[number]]', '[[class_name]]', '[[item_class]]'],
-        [user, text, this._tpl_close, image_str, this._item_count, class_name, item_class], tmp
+        ['[[username]]', '[[text]]', '[[close]]', '[[image]]', '[[number]]', '[[class_name]]', '[[item_class]]', '[[gritter_id]]'],
+        [user, text, this._tpl_close, image_str, this._item_count, class_name, item_class, gritter_id], tmp
       );
-          
+
       this['_before_open_' + number]();
       $('#gritter-notice-wrapper').addClass(position).append(tmp);
-      
+
       var item = $('#gritter-item-' + this._item_count);
-      
+
       item.fadeIn(this.fade_in_speed, function(){
         Gritter['_after_open_' + number]($(this));
       });
-          
+
       if(!sticky){
         this._setFadeTimer(item, number);
       }
-      
+
       // Bind the hover/unhover states
       $(item).bind('mouseenter mouseleave', function(event){
         if(event.type == 'mouseenter'){
@@ -234,8 +248,10 @@ window.Modernizr = function (a, b, c) {
         }
         Gritter._hoverState($(this), event.type);
       });
-      
+
       return number;
+	  }
+
       
     },
     
